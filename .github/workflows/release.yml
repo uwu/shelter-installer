@@ -122,6 +122,11 @@ jobs:
                   export GOPATH=/mingw64
                   CGO_ENABLED=1 GOOS=windows GOARCH=amd64 go build -v -tags static -ldflags "-s -w -H=windowsgui"
 
+            - name: List
+              shell: msys2 {0}
+              run: |
+                  ls
+
             - name: Upload artifact
               uses: actions/upload-artifact@v2
               with:
