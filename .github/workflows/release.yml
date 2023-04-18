@@ -122,16 +122,12 @@ jobs:
                   export GOPATH=/mingw64
                   CGO_ENABLED=1 GOOS=windows GOARCH=amd64 go build -v -tags static -ldflags "-s -w -H=windowsgui"
 
-            - name: List
-              shell: msys2 {0}
-              run: |
-                  ls
 
             - name: Upload artifact
               uses: actions/upload-artifact@v2
               with:
                   name: installer-windows
-                  path: install-shelter.exe
+                  path: shelter-installer.exe
 
     release:
         runs-on: ubuntu-latest
@@ -172,6 +168,6 @@ jobs:
                   prerelease: false
                   body_path: .github/release_body_template.md
                   files: |
-                      linux/install-shelter
+                      linux/shelter-installer
                       macos/Install shelter.dmg
-                      windows/install-shelter.exe
+                      windows/shelter-installer.exe
