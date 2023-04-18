@@ -20,10 +20,10 @@ jobs:
             - name: Checkout code
               uses: actions/checkout@v2
 
-            - name: Install Linux dependencies
-              run: |
-                  sudo apt update
-                  sudo apt install -y gtk+-3.0 xorg-dev
+            # - name: Install Linux dependencies
+            #   run: |
+            #       sudo apt update
+            #       sudo apt install -y gtk+-3.0 xorg-dev
 
             - name: Install Go dependencies
               run: go get -v
@@ -114,14 +114,12 @@ jobs:
                   export GOROOT=/mingw64/lib/go
                   export GOPATH=/mingw64
                   go get -v
-                  go install github.com/tc-hib/go-winres@latest
 
             - name: Build
               shell: msys2 {0}
               run: |
                   export GOROOT=/mingw64/lib/go
                   export GOPATH=/mingw64
-                  go-winres make --product-version "git-tag"
                   CGO_ENABLED=1 GOOS=windows GOARCH=amd64 go build -v -tags static -ldflags "-s -w -H=windowsgui"
 
             - name: Upload artifact
