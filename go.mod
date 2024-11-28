@@ -1,39 +1,43 @@
 module github.com/uwu/shelter-installer
 
-go 1.19
+go 1.22.0
 
-require fyne.io/fyne/v2 v2.3.3
-
-require github.com/TheTitanrain/w32 v0.0.0-20200114052255-2654d97dbd3d // indirect
+toolchain go1.23.3
 
 require (
-	fyne.io/systray v1.10.1-0.20230312215936-7f71b037e260 // indirect
-	github.com/benoitkugler/textlayout v0.3.0 // indirect
+	fyne.io/fyne/v2 v2.5.2
+	github.com/sqweek/dialog v0.0.0-20240226140203-065105509627
+)
+
+require (
+	fyne.io/systray v1.11.0 // indirect
+	github.com/BurntSushi/toml v1.4.0 // indirect
+	github.com/TheTitanrain/w32 v0.0.0-20180517000239-4f5cfb03fabf // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/fredbi/uri v1.0.0 // indirect
-	github.com/fsnotify/fsnotify v1.6.0 // indirect
-	github.com/fyne-io/gl-js v0.0.0-20220802150000-8e339395f381 // indirect
-	github.com/fyne-io/glfw-js v0.0.0-20220517201726-bebc2019cd33 // indirect
-	github.com/fyne-io/image v0.0.0-20221020213044-f609c6a24345 // indirect
+	github.com/fredbi/uri v1.1.0 // indirect
+	github.com/fsnotify/fsnotify v1.7.0 // indirect
+	github.com/fyne-io/gl-js v0.0.0-20220119005834-d2da28d9ccfe // indirect
+	github.com/fyne-io/glfw-js v0.0.0-20240101223322-6e1efdc71b7a // indirect
+	github.com/fyne-io/image v0.0.0-20220602074514-4956b0afb3d2 // indirect
 	github.com/go-gl/gl v0.0.0-20211210172815-726fda9656d6 // indirect
-	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20221017161538-93cebf72946b // indirect
-	github.com/go-text/typesetting v0.0.0-20230413204129-b4f0492bf7ae // indirect
+	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20240506104042-037f3cc74f2a // indirect
+	github.com/go-text/render v0.2.0 // indirect
+	github.com/go-text/typesetting v0.2.0 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
-	github.com/goki/freetype v1.0.1 // indirect
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
+	github.com/jeandeaual/go-locale v0.0.0-20240223122105-ce5225dcaa49 // indirect
 	github.com/jsummers/gobmp v0.0.0-20151104160322-e2ba15ffa76e // indirect
+	github.com/nicksnyder/go-i18n/v2 v2.4.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/sqweek/dialog v0.0.0-20220809060634-e981b270ebbf
+	github.com/rymdport/portal v0.2.6 // indirect
 	github.com/srwiley/oksvg v0.0.0-20221011165216-be6e8873101c // indirect
 	github.com/srwiley/rasterx v0.0.0-20220730225603-2ab79fcdd4ef // indirect
-	github.com/stretchr/testify v1.8.2 // indirect
-	github.com/tevino/abool v1.2.0 // indirect
-	github.com/yuin/goldmark v1.5.4 // indirect
-	golang.org/x/image v0.7.0 // indirect
-	golang.org/x/mobile v0.0.0-20230301163155-e0f57694e12c // indirect
-	golang.org/x/net v0.9.0 // indirect
-	golang.org/x/sys v0.7.0 // indirect
-	golang.org/x/text v0.9.0 // indirect
+	github.com/stretchr/testify v1.8.4 // indirect
+	github.com/yuin/goldmark v1.7.1 // indirect
+	golang.org/x/image v0.18.0 // indirect
+	golang.org/x/mobile v0.0.0-20231127183840-76ac6878050a // indirect
+	golang.org/x/net v0.25.0 // indirect
+	golang.org/x/sys v0.20.0 // indirect
+	golang.org/x/text v0.16.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	honnef.co/go/js/dom v0.0.0-20221001195520-26252dedbe70 // indirect
 )

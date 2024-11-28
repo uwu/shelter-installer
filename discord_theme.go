@@ -29,7 +29,7 @@ func (discordTheme) Color(c fyne.ThemeColorName, v fyne.ThemeVariant) color.Colo
 		return color.NRGBA{R: 0xf3, G: 0xf3, B: 0xf3, A: 0xff}
 	case theme.ColorNameHover:
 		return color.NRGBA{R: 0xff, G: 0xff, B: 0xff, A: 0xf}
-	case theme.ColorNameInputBackground:
+	case theme.ColorNameInputBackground, theme.ColorNameMenuBackground:
 		return color.NRGBA{R: 0x1e, G: 0x1f, B: 0x22, A: 0xff}
 	case theme.ColorNamePlaceHolder:
 		return color.NRGBA{R: 0xb2, G: 0xb2, B: 0xb2, A: 0xff}

@@ -14,20 +14,24 @@ import (
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
-	"github.com/sqweek/dialog"
+	//"github.com/sqweek/dialog"
 )
 
-func main() {
+func mayNeedElevation() bool {
 	user, err := user.Current()
 
 	if err != nil {
 		panic(err)
 	}
 
-	if user.Username != "root" && runtime.GOOS == "linux" {
+	return user.Username != "root" && runtime.GOOS == "linux";
+}
+
+func main() {
+	/* if mayNeedElevation() {
 		dialog.Message("%s", "Installing shelter requires root permissions. Please rerun shelter installer as root to continue.").Error()
 		return
-	}
+	} */
 
 	a := app.New()
 	a.Settings().SetTheme(discordTheme{})
