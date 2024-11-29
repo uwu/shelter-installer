@@ -66,14 +66,14 @@ jobs:
             - name: Build ARM
               run: CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 go build -o installer-arm64 -v -tags static -ldflags "-s -w"
 
-            - name: Lipo ARM
-              run: lipo -create installer-arm64 installer-x86 -o shelter-installer
+            - name: Lipo (create universal binary)
+              run: lipo -create installer-arm64 installer-x86 -output shelter-installer
 
             - name: Create .app folder
               run: |
                 go run fyne.io/fyne/v2/cmd/fyne@latest -- package -os darwin -use-raw-icon -icon assets/mac-icon.icns -name "Install shelter"
 
-            - name: Move to .app folder
+            - name: Replace binary in .app folder with a universal bin
               run: |
                 rm Install\ shelter.app/Contents/MacOS/shelter-installer
                 mv ./shelter-installer Install\ shelter.app/Contents/MacOS/shelter-installer
