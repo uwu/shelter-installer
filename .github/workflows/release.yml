@@ -75,7 +75,7 @@ jobs:
                 mkdir "Install shelter.app/Contents/Resources"
                 cp assets/mac-icon.icns "Install shelter.app/Contents/Resources/icon.icns"
                 cp shelter-installer "Install shelter.app/Contents/MacOS"
-                echo > "Install shelter.app/Contents/Info.plist" <<EOF
+                cat > "Install shelter.app/Contents/Info.plist" <<EOF
                 <?xml version="1.0" encoding="UTF-8"?>
                 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
                 <plist version="1.0">
@@ -198,9 +198,8 @@ jobs:
                   echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
             - name: Create the release
-              uses: softprops/action-gh-release@v1
-              env:
-                  GITHUB_TOKEN: ${{ secrets.LINK_TOKEN }}
+              uses: softprops/action-gh-release@v2
+              if: startsWith(github.ref, 'refs/tags/')
               with:
                   name: ${{ steps.release_values.outputs.tag }}, ${{ steps.release_values.outputs.date }}
                   draft: true
