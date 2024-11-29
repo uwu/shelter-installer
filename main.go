@@ -2,51 +2,29 @@ package main
 
 import (
 	"image/color"
-	"io"
-	"net/http"
-	"os"
-	"os/user"
-	"path/filepath"
-	"runtime"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
-	//"github.com/sqweek/dialog"
+	"github.com/sqweek/dialog"
 )
 
-func mayNeedElevation() bool {
-	user, err := user.Current()
-
-	if err != nil {
-		panic(err)
-	}
-
-	return user.Username != "root" && runtime.GOOS == "linux";
-}
-
 func main() {
-	/* if mayNeedElevation() {
-		dialog.Message("%s", "Installing shelter requires root permissions. Please rerun shelter installer as root to continue.").Error()
-		return
-	} */
+
+	if isDiscordRunning() {
+		dialog.Message("%s", "Discord appears to be currently running. Please fully exit it prior to un/installing shelter.").Error()
+	}
 
 	a := app.New()
 	a.Settings().SetTheme(discordTheme{})
 	w := a.NewWindow("shelter installer")
 	w.SetFixedSize(true)
 
-	selectedInstancePath := make([]string, 1)
+	allAvailableInstances := GetChannels()
 
-	instances := make(map[string]string)
-	var channels []string
-	for _, instance := range GetChannels() {
-		instances[instance.Channel] = instance.Path
-
-		channels = append(channels, instance.Channel)
-	}
+	var selectedInstance *DiscordInstance
 
 	header := canvas.NewText("shelter installer", color.White)
 	header.TextSize = 22
@@ -57,88 +35,69 @@ func main() {
 	installButton := widget.NewButton("Install", func() {})
 	installButton.Disable()
 
-	installedContainer := container.NewVBox()
-
-	updateButton := widget.NewButton("Update", func() {})
 	uninstallButton := widget.NewButton("Uninstall", func() {})
 
-	installedContainer.Add(updateButton)
-	installedContainer.Add(uninstallButton)
+	uninstallButton.Hide()
 
-	installedContainer.Hide()
+	setInstallVisibilities := func() {
+		if selectedInstance == nil {
+			uninstallButton.Hide()
+			installButton.Show()
+			installButton.Disable()
+		} else {
+			installButton.Enable()
+			if isShelterNewInstalled(*selectedInstance) {
+				uninstallButton.Show()
+				installButton.Hide()
+			} else {
+				installButton.Show()
+				uninstallButton.Hide()
+			}
 
-	showInstall := func() {
-		installButton.Show()
-		installButton.Enable()
-		installedContainer.Hide()
-
-		w.Resize(fyne.NewSize(0, 0))
-	}
-
-	showUninstall := func() {
-		installButton.Hide()
-		installButton.Disable()
-		installedContainer.Show()
+			tis := checkTraditionalInstall(*selectedInstance)
+			if tis == AsarInstallStateShelter || tis == AsarInstallStateShelterArchLinux {
+				installButton.SetText("Upgrade")
+			} else {
+				installButton.SetText("Install")
+			}
+		}
 
 		w.Resize(fyne.NewSize(0, 0))
 	}
 
 	installButton.OnTapped = func() {
-		shelterZip, err := os.CreateTemp("", "shelter.zip")
-		if err != nil {
-			a.Quit()
-		}
+		if (selectedInstance == nil) {return}
+		installShelter(*selectedInstance)
 
-		tempDirectory := os.TempDir()
-
-		resp, err := http.Get("https://github.com/uwu/shelter/archive/refs/heads/main.zip")
-		if err != nil {
-			a.Quit()
-		}
-		defer resp.Body.Close()
-
-		_, err = io.Copy(shelterZip, resp.Body)
-
-		Unzip(shelterZip.Name(), tempDirectory)
-		os.Remove(shelterZip.Name())
-
-		shelterDir := filepath.Join(tempDirectory, "shelter-main")
-		injectorPath := filepath.Join(shelterDir, "injectors/desktop/app")
-
-		os.Rename(injectorPath, filepath.Join(selectedInstancePath[0], "app"))
-		os.Remove(shelterDir)
-
-		os.Rename(filepath.Join(selectedInstancePath[0], "app.asar"), filepath.Join(selectedInstancePath[0], "original.asar"))
-
-		showUninstall()
-	}
-
-	updateButton.OnTapped = func() {
-		os.RemoveAll(filepath.Join(selectedInstancePath[0], "app"))
-		installButton.OnTapped()
+		setInstallVisibilities()
 	}
 
 	uninstallButton.OnTapped = func() {
-		os.RemoveAll(filepath.Join(selectedInstancePath[0], "app"))
-		os.Rename(filepath.Join(selectedInstancePath[0], "original.asar"), filepath.Join(selectedInstancePath[0], "app.asar"))
+		if (selectedInstance == nil) {return}
+		uninstallShelter(*selectedInstance)
 
-		showInstall()
+		setInstallVisibilities()
+	}
+
+	// fyne's Select widge API is not designed well (only deals in strings) so we have to do this BS.
+
+	channelDisplayMap := make(map[string]*DiscordInstance)
+	channelDisplayList := []string{}
+	for _, instance := range allAvailableInstances {
+		channelDisplayMap[instance.Channel] = &instance
+		channelDisplayList = append(channelDisplayList, instance.Channel)
 	}
 
 	w.SetContent(container.NewVBox(
 		header,
 		description,
-		widget.NewSelect(channels, func(s string) {
-			selectedInstancePath[0] = instances[s]
+		widget.NewSelect(channelDisplayList, func(s string) {
+			selectedInstance = channelDisplayMap[s]
 
-			if _, err := os.Stat(filepath.Join(selectedInstancePath[0], "original.asar")); os.IsNotExist(err) {
-				showInstall()
-			} else {
-				showUninstall()
-			}
+			setInstallVisibilities()
 		}),
 		installButton,
-		installedContainer,
+		uninstallButton,
 	))
 
 	w.ShowAndRun()

@@ -9,47 +9,63 @@ import (
 	"strings"
 )
 
+func cfgDir() string {
+	cfg, err := os.UserConfigDir()
+
+	if (err != nil) {
+		panic(err)
+	}
+
+	return cfg
+}
+
 type DiscordInstance struct {
-	// Path to "resources" directory
-	Path    string
+	// path to "resources" directory
+	PathRes string
+	// path to settings location
+	PathCfg string
 	Channel string
 }
 
 func GetInstance(channel string) (DiscordInstance, error) {
-	channelString := "Discord"
+	channelStringRes := "Discord"
+	channelStringCfg := "discord"
 
 	// Generate channel strings (e.g discord-canary, DiscordCanary, Discord Canary)
 	if channel != "Stable" {
+		channelStringCfg = channelStringCfg + strings.ToLower(channel)
+
 		switch os := runtime.GOOS; os {
 		case "darwin":
-			channelString = channelString + " " + channel
+			channelStringRes = channelStringRes + " " + channel
 		case "windows":
-			channelString = channelString + channel
+			channelStringRes = channelStringRes + channel
 		default: // Linux and BSD are basically the same thing
-			channelString = channelString + "-" + channel
+			channelStringRes = channelStringRes + "-" + channel
 		}
 	}
 
 	instance := DiscordInstance{
-		Path:    "",
+		PathRes: "",
+		PathCfg: filepath.Join(cfgDir(), channelStringCfg, "settings.json"),
 		Channel: channel,
 	}
 
 	switch OS := runtime.GOOS; OS {
 	case "darwin":
-		instance.Path = filepath.Join("/Applications", channelString+".app", "Contents", "Resources")
+		instance.PathRes = filepath.Join("/Applications", channelStringRes+".app", "Contents", "Resources")
 	case "windows":
-		starterPath := filepath.Join(os.Getenv("localappdata"), channelString, "/")
+		starterPath := filepath.Join(os.Getenv("localappdata"), channelStringRes, "/")
 		filepath.Walk(starterPath, func(path string, _ fs.FileInfo, _ error) error {
 
 			if strings.HasPrefix(filepath.Base(path), "app-") {
-				instance.Path = filepath.Join(path, "resources")
+				instance.PathRes = filepath.Join(path, "resources")
 			}
 
 			return nil
 		})
 	default: // Linux and BSD are *still* basically the same thing
-		channels := []string{channelString, strings.ToLower(channelString)}
+		channels := []string{channelStringRes, strings.ToLower(channelStringRes)}
 		path := os.Getenv("PATH")
 
 		for _, channel := range channels {
@@ -58,18 +74,20 @@ func GetInstance(channel string) (DiscordInstance, error) {
 				if _, err := os.Stat(joinedPath); err == nil {
 					possiblepath, _ := filepath.EvalSymlinks(joinedPath)
 					if possiblepath != joinedPath {
-						instance.Path = filepath.Join(possiblepath, "..", "resources")
+						instance.PathRes = filepath.Join(possiblepath, "..", "resources")
 					}
 				}
 			}
 		}
 
-		if instance.Path == "" && channel == "Stable" {
-			instance.Path = "/var/lib/flatpak/app/com.discordapp.Discord/x86_64/stable/active/files/discord/resources/"
+		// flatpak
+		if instance.PathRes == "" && channel == "Stable" {
+			instance.PathRes = "/var/lib/flatpak/app/com.discordapp.Discord/x86_64/stable/active/files/discord/resources/"
+			instance.PathCfg = filepath.Join(filepath.Dir(cfgDir()), ".var/app/com.discordapp.Discord/config/discord/settings.json")
 		}
 	}
 
-	if _, err := os.Stat(instance.Path); err == nil {
+	if _, err := os.Stat(instance.PathRes); err == nil {
 		return instance, nil
 	} else {
 		return instance, errors.New("Instance doesn't exist")
@@ -92,11 +110,11 @@ func GetChannels() []DiscordInstance {
 
 func NewDiscordInstance(path string) (*DiscordInstance, error) {
 	instance := DiscordInstance{
-		Path:    path,
+		PathRes:    path,
 		Channel: "Unknown",
 	}
 
-	if _, err := os.Stat(filepath.Join(instance.Path, "app.asar")); err == nil {
+	if _, err := os.Stat(filepath.Join(instance.PathRes, "app.asar")); err == nil {
 		return &instance, nil
 	} else {
 		return nil, errors.New("Instance doesn't exist")
