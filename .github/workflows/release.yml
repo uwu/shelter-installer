@@ -30,17 +30,17 @@ jobs:
               run: go get -v
 
             - name: Build
-              run: CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -v -tags static -ldflags "-s -w"
+              run: CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o install-shelter -v -tags static -ldflags "-s -w"
 
             - name: Update executable
               run: |
-                  chmod +x shelter-installer
+                  chmod +x install-shelter
 
             - name: Upload artifact
               uses: actions/upload-artifact@v4
               with:
                   name: installer-linux
-                  path: shelter-installer
+                  path: install-shelter
 
     build-mac:
         runs-on: macos-latest
