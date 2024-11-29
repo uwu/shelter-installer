@@ -3,6 +3,7 @@ on:
     push:
         tags:
             - v*
+    workflow_dispatch:
 
 env:
   FORCE_COLOR: true
@@ -13,17 +14,17 @@ jobs:
 
         steps:
             - name: Install Go
-              uses: actions/setup-go@v2
+              uses: actions/setup-go@v4
               with:
-                  go-version: "1.19"
+                  go-version: "1.23"
 
             - name: Checkout code
-              uses: actions/checkout@v2
+              uses: actions/checkout@v3
 
             - name: Install Linux dependencies
               run: |
                   sudo apt update
-                  sudo apt install -y build-essential libgtk-3-dev libx11-dev libxxf86vm-dev
+                  sudo apt install -y build-essential libgtk-3-dev xorg-dev
 
             - name: Install Go dependencies
               run: go get -v
@@ -36,7 +37,7 @@ jobs:
                   chmod +x shelter-installer
 
             - name: Upload artifact
-              uses: actions/upload-artifact@v2
+              uses: actions/upload-artifact@v4
               with:
                   name: installer-linux
                   path: shelter-installer
@@ -46,12 +47,12 @@ jobs:
 
         steps:
             - name: Install Go
-              uses: actions/setup-go@v2
+              uses: actions/setup-go@v4
               with:
-                  go-version: "1.19.4"
+                  go-version: "1.23"
 
             - name: Checkout code
-              uses: actions/checkout@v2
+              uses: actions/checkout@v3
 
             - name: Install dependencies
               run: brew install create-dmg
@@ -66,11 +67,16 @@ jobs:
               run: CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 go build -o installer-arm64 -v -tags static -ldflags "-s -w"
 
             - name: Lipo ARM
-              run: lipo -create installer-arm64 installer-x86 -hideARM64 -o shelter-installer
+              run: lipo -create installer-arm64 installer-x86 -o shelter-installer
 
             - name: Create .app folder
               run: |
-                go run fyne.io/fyne/v2/cmd/fyne@latest -- package -os darwin -icon assets/mac-icon.icns -name "Install shelter"
+                go run fyne.io/fyne/v2/cmd/fyne@latest -- package -os darwin -use-raw-icon -icon assets/mac-icon.icns -name "Install shelter"
+
+            - name: Move to .app folder
+              run: |
+                rm Install\ shelter.app/Contents/MacOS/shelter-installer
+                mv ./shelter-installer Install\ shelter.app/Contents/MacOS/shelter-installer
 
             - name: Create DMG folder
               run: |
@@ -81,7 +87,7 @@ jobs:
               run: create-dmg --background assets/shelter-bg.png --volname shelter --window-size 500 350 --icon "Install shelter.app" 250 135  "Install shelter.dmg" shelter-installer-dir
 
             - name: Upload artifact
-              uses: actions/upload-artifact@v2
+              uses: actions/upload-artifact@v4
               with:
                   name: installer-macos
                   path: Install shelter.dmg
@@ -91,12 +97,12 @@ jobs:
 
         steps:
             - name: Install Go
-              uses: actions/setup-go@v2
+              uses: actions/setup-go@v4
               with:
-                  go-version: "1.19"
+                  go-version: "1.23"
 
             - name: Checkout code
-              uses: actions/checkout@v2
+              uses: actions/checkout@v3
 
             - name: Setup MSYS2
               uses: msys2/setup-msys2@v2
@@ -120,14 +126,13 @@ jobs:
               run: |
                   export GOROOT=/mingw64/lib/go
                   export GOPATH=/mingw64
-                  CGO_ENABLED=1 GOOS=windows GOARCH=amd64 go build -v -tags static -ldflags "-s -w -H=windowsgui"
-
+                  CGO_ENABLED=1 GOOS=windows GOARCH=amd64 go build -o install-shelter.exe -v -tags static -ldflags "-s -w -H=windowsgui"
 
             - name: Upload artifact
-              uses: actions/upload-artifact@v2
+              uses: actions/upload-artifact@v4
               with:
                   name: installer-windows
-                  path: shelter-installer.exe
+                  path: install-shelter.exe
 
     release:
         runs-on: ubuntu-latest
@@ -135,19 +140,19 @@ jobs:
 
         steps:
             - name: Checkout code
-              uses: actions/checkout@v2
+              uses: actions/checkout@v3
 
-            - uses: actions/download-artifact@v2
+            - uses: actions/download-artifact@v4
               with:
                   name: installer-linux
                   path: linux
 
-            - uses: actions/download-artifact@v2
+            - uses: actions/download-artifact@v4
               with:
                   name: installer-macos
                   path: macos
 
-            - uses: actions/download-artifact@v2
+            - uses: actions/download-artifact@v4
               with:
                   name: installer-windows
                   path: windows
@@ -155,8 +160,8 @@ jobs:
             - name: Get some values needed for the release
               id: release_values
               run: |
-                  echo "::set-output name=date::$(date '+%Y-%m-%d')"
-                  echo "::set-output name=tag::${GITHUB_REF#refs/tags/}"
+                  echo "date=$(date '+%Y-%m-%d')" >> $GITHUB_OUTPUT
+                  echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
             - name: Create the release
               uses: softprops/action-gh-release@v1
@@ -168,6 +173,6 @@ jobs:
                   prerelease: false
                   body_path: .github/release_body_template.md
                   files: |
-                      linux/shelter-installer
+                      linux/install-shelter
                       macos/Install shelter.dmg
-                      windows/shelter-installer.exe
+                      windows/install-shelter.exe
