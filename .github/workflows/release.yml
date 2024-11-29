@@ -67,16 +67,50 @@ jobs:
               run: CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 go build -o installer-arm64 -v -tags static -ldflags "-s -w"
 
             - name: Lipo (create universal binary)
-              run: lipo -create installer-arm64 installer-x86 -output shelter-installer
+              run: lipo installer-arm64 installer-x86 -output shelter-installer -create
 
             - name: Create .app folder
               run: |
-                go run fyne.io/fyne/v2/cmd/fyne@latest -- package -os darwin -use-raw-icon -icon assets/mac-icon.icns -name "Install shelter"
-
-            - name: Replace binary in .app folder with a universal bin
-              run: |
-                rm Install\ shelter.app/Contents/MacOS/shelter-installer
-                mv ./shelter-installer Install\ shelter.app/Contents/MacOS/shelter-installer
+                mkdir -p "Install shelter.app/Contents/MacOS"
+                mkdir "Install shelter.app/Contents/Resources"
+                cp assets/mac-icon.icns "Install shelter.app/Contents/Resources/icon.icns"
+                cp shelter-installer "Install shelter.app/Contents/MacOS"
+                echo > "Install shelter.app/Contents/Info.plist" <<EOF
+                <?xml version="1.0" encoding="UTF-8"?>
+                <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+                <plist version="1.0">
+                <dict>
+                	<key>CFBundleName</key>
+                	<string>Install shelter</string>
+                	<key>CFBundleExecutable</key>
+                	<string>shelter-installer</string>
+                	<key>CFBundleIdentifier</key>
+                	<string>network.uwu.shelter-installer</string>
+                	<key>CFBundleIconFile</key>
+                	<string>icon.icns</string>
+                	<key>CFBundleShortVersionString</key>
+                	<string>2.0.0</string>
+                	<key>CFBundleSupportedPlatforms</key>
+                	<array>
+                		<string>MacOSX</string>
+                	</array>
+                	<key>CFBundleVersion</key>
+                	<string>1</string>
+                	<key>NSHighResolutionCapable</key>
+                	<true/>
+                	<key>NSSupportsAutomaticGraphicsSwitching</key>
+                	<true/>
+                	<key>CFBundleInfoDictionaryVersion</key>
+                	<string>6.0</string>
+                	<key>CFBundlePackageType</key>
+                	<string>APPL</string>
+                	<key>LSApplicationCategoryType</key>
+                	<string>public.app-category.</string>
+                	<key>LSMinimumSystemVersion</key>
+                	<string>10.11</string>
+                </dict>
+                </plist>
+                EOF
 
             - name: Create DMG folder
               run: |
