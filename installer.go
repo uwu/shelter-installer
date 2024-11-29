@@ -155,6 +155,14 @@ func uninstallTraditionalShelter(instance DiscordInstance, removing bool) bool {
 			} else {
 				err = os.Rename(filepath.Join(instance.PathRes, "original.asar"), filepath.Join(instance.PathRes, "app.asar"))
 
+				// macos sucks, so we need to double-check that this actually goddamn worked. great.
+				_, serr := os.Stat(filepath.Join(instance.PathRes, "app.asar"))
+
+				if serr != nil {
+					dialog.Message("%s", "Removing your old-style shelter installation requires the App Management permission. Please allow this in System Settings > Security & Privacy > Privacy and try again, or manually uninstall shelter.").Error()
+					return false
+				}
+
 				if err == nil {
 					err = os.RemoveAll(filepath.Join(instance.PathRes, "app"))
 				}
