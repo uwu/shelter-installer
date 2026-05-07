@@ -255,6 +255,16 @@ func installShelter(instance DiscordInstance) {
 		return
 	}
 
+	// if the instance has never been launched there may be no config directory, and no config file, check that
+	if _, err := os.Stat(instance.PathCfg); errors.Is(err, os.ErrNotExist) {
+		// if parent dir doesn't exist, create it, don't bother going any further up than one level
+		parent, _ := filepath.Split(instance.PathCfg)
+		os.Mkdir(parent, 0755) // we don't care if this succeeds
+
+		// create stub settings json, again we dont care if this succeeds
+		os.WriteFile(instance.PathCfg, []byte{0x7b, 0x7d}, 0644)
+	}
+
 	// read the settings json
 	// note if we fail here we remove the old shelter and don't replace it, lol oopsies.
 	content, err := os.ReadFile(instance.PathCfg)

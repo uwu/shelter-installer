@@ -25,6 +25,10 @@ type DiscordInstance struct {
 	// path to settings location
 	PathCfg string
 	Channel string
+	// when true, PathRes has a known location but does not exist yet
+	// this generally occurs when running the installer before the given
+	// instance has been launched yet, on a self-host-updating platform
+	NoRes   bool
 }
 
 func GetInstance(channel string) (DiscordInstance, error) {
@@ -49,6 +53,7 @@ func GetInstance(channel string) (DiscordInstance, error) {
 		PathRes: "",
 		PathCfg: filepath.Join(cfgDir(), channelStringCfg, "settings.json"),
 		Channel: channel,
+		NoRes: false,
 	}
 
 	switch OS := runtime.GOOS; OS {
@@ -68,12 +73,41 @@ func GetInstance(channel string) (DiscordInstance, error) {
 		channels := []string{channelStringRes, strings.ToLower(channelStringRes)}
 		path := os.Getenv("PATH")
 
+		// check both i.e, Discord and discord, Discord-Canary and discord-canary
 		for _, channel := range channels {
+			// check for those executables at every element of $PATH
 			for _, pathItem := range strings.Split(path, ":") {
 				joinedPath := filepath.Join(pathItem, channel)
 				if _, err := os.Stat(joinedPath); err == nil {
 					possiblepath, _ := filepath.EvalSymlinks(joinedPath)
+
+					// possiblepath is either:
+					// >= 1.0.136: a path (symlink or not) to the discord shim shell script
+					// <= 1.0.135, possiblepath != joinedPath, a symlink to the real discord install location
+					// <= 1.0.135, possiblepath == joinedPath, something weird we don't recognise, ignore it
+
+					// check if its a shell script
+
+					f, err := os.Open(possiblepath)
+					if err == nil {
+						defer f.Close()
+
+						bexp := []byte{0x23, 0x21}
+						bact := make([]byte, 2)
+						_, err = f.Read(bact)
+
+						if err == nil && bexp[0] == bact[0] && bexp[1] == bact[1] {
+							// it is fine that we have no res folder because the legacy injector has been deprecated
+							// before this install location started being used, and no version of the installer will
+							// install to here, so we can ~safely just assume there is nothing to uninstall and say
+							// "just install sheltupdate it'll be okay :)"
+							instance.NoRes = true
+							continue
+						}
+					}
+
 					if possiblepath != joinedPath {
+						// old style install
 						instance.PathRes = filepath.Join(possiblepath, "..", "resources")
 					}
 				}
@@ -87,7 +121,7 @@ func GetInstance(channel string) (DiscordInstance, error) {
 		}
 	}
 
-	if _, err := os.Stat(instance.PathRes); err == nil {
+	if _, err := os.Stat(instance.PathRes); err == nil || instance.NoRes {
 		return instance, nil
 	} else {
 		return instance, errors.New("Instance doesn't exist")
