@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -279,9 +280,9 @@ func installShelter(instance DiscordInstance) {
 	}
 
 	if err != nil {
-		dialog.Message("%s", "Failed to install shelter. *If* you had an old-style injector present, it has been removed.").Error()
+		dialog.Message("%s", fmt.Sprintf("Failed to install shelter. *If* you had an old-style injector present, it has been removed.\n\n%v", err)).Error()
 	} else {
-		dialog.Message("%s", "shelter has been installed successfully 🎉. Please restart Discord if it is open.").Info()
+		dialog.Message("%s", "shelter has been installed successfully. Please restart Discord if it is open.").Info()
 	}
 }
 
@@ -306,7 +307,7 @@ func uninstallShelter(instance DiscordInstance) {
 	}
 
 	if err != nil {
-		dialog.Message("%s", "Encountered an error while uninstalling shelter. shelter may or may not remain installed.")
+		dialog.Message("%s", fmt.Sprintf("Encountered an error while uninstalling shelter. shelter may or may not remain installed.\n\n%v", err)).Error()
 	} else {
 		dialog.Message("%s", "shelter has been uninstalled successfully.").Info()
 	}

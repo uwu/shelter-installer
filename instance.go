@@ -115,7 +115,7 @@ func GetInstance(channel string) (DiscordInstance, error) {
 		}
 
 		// flatpak
-		if instance.PathRes == "" && channel == "Stable" {
+		if !instance.NoRes && instance.PathRes == "" && channel == "Stable" {
 			instance.PathRes = "/var/lib/flatpak/app/com.discordapp.Discord/x86_64/stable/active/files/discord/resources/"
 			instance.PathCfg = filepath.Join(filepath.Dir(cfgDir()), ".var/app/com.discordapp.Discord/config/discord/settings.json")
 		}
